@@ -17,19 +17,27 @@ Historical data is obtained using the **yfinance API**.
 
 ## Financial Concepts Used
 
-Financial Concepts Used
 This project implements several core financial risk metrics commonly used in quantitative finance and portfolio risk analysis.
 
-Log Returns — Measures continuous asset returns and is widely used in financial modeling.
-Annual Return — Scales the average daily return to yearly performance.
-Annual Volatility — Measures the dispersion of returns and represents market risk.
-Sharpe Ratio — Evaluates risk-adjusted return by comparing return to volatility.
-Skewness — Measures asymmetry in the return distribution.
-Kurtosis — Measures the presence of extreme values (fat tails) in returns.
-Value at Risk (VaR) — Estimates potential losses at a given confidence level (95% in this project).
-Maximum Drawdown — Measures the largest peak-to-trough decline in cumulative returns.
-Rolling Volatility — Tracks how volatility evolves over time using moving windows.
-Correlation Matrix — Shows how assets move relative to each other, useful for diversification analysis.
+- **Log Returns** — Measures continuous asset returns and is widely used in financial modeling.
+
+- **Annual Return** — Scales the average daily return to yearly performance.
+
+- **Annual Volatility** — Measures the dispersion of returns and represents market risk.
+
+- **Sharpe Ratio** — Evaluates risk-adjusted return by comparing return to volatility.
+
+- **Skewness** — Measures asymmetry in the return distribution.
+
+- **Kurtosis** — Measures the presence of extreme values (fat tails) in returns.
+
+- **Value at Risk (VaR)** — Estimates potential losses at a given confidence level (95% in this project).
+
+- **Maximum Drawdown** — Measures the largest peak-to-trough decline in cumulative returns.
+
+- **Rolling Volatility** — Tracks how volatility evolves over time using moving windows.
+
+- **Correlation Matrix** — Measures how assets move relative to each other and helps analyze diversification within a portfolio.
 
 ---
 
