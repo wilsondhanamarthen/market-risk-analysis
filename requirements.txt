@@ -3,4 +3,4 @@ numpy
 pandas
 matplotlib
 
-pip install -r requirements.txt 
+p
