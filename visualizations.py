@@ -1,8 +1,15 @@
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+import webbrowser
+import os
 
 COLORS = ["#636EFA", "#EF553B", "#00CC96", "#AB63FA", "#FFA15A"]
+
+_DASHBOARD_CHARTS = {}
+
+def _register(name, fig):
+    _DASHBOARD_CHARTS[name] = fig
 
 def plot_rolling_volatility(vol_30, vol_90):
     fig = make_subplots(rows=1, cols=1)
@@ -25,8 +32,7 @@ def plot_rolling_volatility(vol_30, vol_90):
         template="plotly_dark",
         height=500
     )
-    fig.write_html("rolling_volatility.html")
-    fig.show()
+    _register("Rolling Volatility", fig)
 
 def plot_drawdown(drawdown):
     fig = go.Figure()
@@ -45,8 +51,7 @@ def plot_drawdown(drawdown):
         template="plotly_dark",
         height=500
     )
-    fig.write_html("drawdown.html")
-    fig.show()
+    _register("Drawdown", fig)
 
 def plot_cumulative_returns(cumulative):
     fig = px.line(
@@ -57,8 +62,7 @@ def plot_cumulative_returns(cumulative):
         template="plotly_dark"
     )
     fig.update_layout(hovermode="x unified", height=500)
-    fig.write_html("cumulative_returns.html")
-    fig.show()
+    _register("Cumulative Returns", fig)
 
 def plot_return_distribution(returns):
     fig = make_subplots(
@@ -76,14 +80,13 @@ def plot_return_distribution(returns):
             ),
             row=1, col=i+1
         )
-    fig.update_layout( 
+    fig.update_layout(
         title="Return Distributions",
         template="plotly_dark",
         showlegend=False,
         height=400
     )
-    fig.write_html("return_distributions.html")
-    fig.show()
+    _register("Return Distributions", fig)
 
 def plot_correlation_heatmap(returns):
     corr = returns.corr().round(2)
@@ -102,8 +105,7 @@ def plot_correlation_heatmap(returns):
         template="plotly_dark",
         height=500
     )
-    fig.write_html("correlation_heatmap.html")
-    fig.show()
+    _register("Correlation Heatmap", fig)
 
 def plot_sharpe_ranking(results):
     ranking = results["Sharpe Ratio"].sort_values(ascending=True)
@@ -121,8 +123,7 @@ def plot_sharpe_ranking(results):
         template="plotly_dark",
         height=400
     )
-    fig.write_html("sharpe_ranking.html")
-    fig.show()
+    _register("Sharpe Ranking", fig)
 
 def plot_momentum_strategy(buy_hold, momentum):
     fig = go.Figure()
@@ -144,8 +145,7 @@ def plot_momentum_strategy(buy_hold, momentum):
         template="plotly_dark",
         height=500
     )
-    fig.write_html("momentum_strategy.html")
-    fig.show()
+    _register("Momentum Strategy", fig)
 
 def plot_min_variance_weights(weights):
     fig = go.Figure(go.Bar(
@@ -162,7 +162,82 @@ def plot_min_variance_weights(weights):
         template="plotly_dark",
         height=400
     )
-    fig.write_html("min_variance_weights.html")
-    fig.show()
+    _register("Min Variance Weights", fig)
 
-    
+def save_dashboard(path="dashboard.html"):
+    tabs = list(_DASHBOARD_CHARTS.keys())
+
+    chart_divs = {}
+    for i, (name, fig) in enumerate(_DASHBOARD_CHARTS.items()):
+        fig.update_layout(autosize=True, height=None, margin=dict(l=40, r=40, t=50, b=40))
+        chart_divs[name] = fig.to_html(
+            full_html=False,
+            include_plotlyjs=(i == 0),
+            config={"responsive": True},
+            div_id=f"chart-{i}",
+        )
+
+    tab_buttons = "\n".join(
+        f'<button class="tab-btn {"active" if i == 0 else ""}" onclick="showTab({i})">{name}</button>'
+        for i, name in enumerate(tabs)
+    )
+    tab_panels = "\n".join(
+        f'<div class="tab-panel" id="panel-{i}" style="display:{"block" if i == 0 else "none"}">{chart_divs[name]}</div>'
+        for i, name in enumerate(tabs)
+    )
+
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Quant Risk Dashboard</title>
+<style>
+  *, *::before, *::after {{ box-sizing: border-box; }}
+  html, body {{
+    margin: 0; padding: 0; height: 100%;
+    background: #111; color: #eee; font-family: sans-serif; overflow: hidden;
+  }}
+  .tab-bar {{
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 10px 12px; background: #111; border-bottom: 1px solid #333;
+  }}
+  .tab-btn {{
+    background: #222; color: #aaa; border: 1px solid #444;
+    padding: 7px 16px; cursor: pointer; border-radius: 4px; font-size: 13px;
+  }}
+  .tab-btn.active {{ background: #636EFA; color: #fff; border-color: #636EFA; }}
+  .tab-btn:hover:not(.active) {{ background: #333; color: #fff; }}
+  .tab-panel {{
+    position: absolute; top: 52px; left: 0; right: 0; bottom: 0;
+  }}
+  .tab-panel .plotly-graph-div {{
+    width: 100% !important;
+    height: 100% !important;
+  }}
+</style>
+</head>
+<body>
+<div class="tab-bar">{tab_buttons}</div>
+{tab_panels}
+<script>
+function showTab(i) {{
+  document.querySelectorAll('.tab-panel').forEach((p, j) => p.style.display = j === i ? 'block' : 'none');
+  document.querySelectorAll('.tab-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  var panel = document.getElementById('panel-' + i);
+  var gd = panel.querySelector('.plotly-graph-div');
+  if (gd && window.Plotly) Plotly.relayout(gd, {{autosize: true}});
+}}
+window.addEventListener('resize', function() {{
+  document.querySelectorAll('.tab-panel[style*="block"] .plotly-graph-div').forEach(function(gd) {{
+    if (window.Plotly) Plotly.relayout(gd, {{autosize: true}});
+  }});
+}});
+</script>
+</body>
+</html>"""
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+    webbrowser.open(f"file://{os.path.abspath(path)}")
+    print(f"Dashboard saved to {path}")
